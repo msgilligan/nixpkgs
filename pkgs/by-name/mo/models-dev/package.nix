@@ -17,12 +17,12 @@ let
 in
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "models-dev";
-  version = "0-unstable-2025-08-21";
+  version = "0-unstable-2025-08-27";
   src = fetchFromGitHub {
     owner = "sst";
     repo = "models.dev";
-    rev = "7d417bd1b54bfff3c63f2bc2cc486e6b2700a18d";
-    hash = "sha256-9p+Fc21slH0R7YLJOAlVPS+ZPv+I9j745lGYz6+ln/c=";
+    rev = "58cb8fe59ed6c1cbd64ae27a401286bd7cb39f23";
+    hash = "sha256-jGMZvpcpuW2ALGYkYF67HO7sV/XivWXPBqOedGazCAs=";
   };
 
   node_modules = stdenvNoCC.mkDerivation {

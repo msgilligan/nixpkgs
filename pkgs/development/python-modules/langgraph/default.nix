@@ -133,11 +133,15 @@ buildPythonPackage rec {
   ];
 
   # Since `langgraph` is the only unprefixed package, we have to use an explicit match
-  passthru.updateScript = nix-update-script {
-    extraArgs = [
-      "--version-regex"
-      "([0-9.]+)"
-    ];
+  passthru = {
+    # python updater script sets the wrong tag
+    skipBulkUpdate = true;
+    updateScript = nix-update-script {
+      extraArgs = [
+        "--version-regex"
+        "([0-9.]+)"
+      ];
+    };
   };
 
   meta = {

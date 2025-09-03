@@ -20,7 +20,7 @@
 buildPythonPackage rec {
   pname = "django-cachalot";
   version = "2.8.0";
-  pyproject = true;
+  format = "setuptools";
 
   src = fetchFromGitHub {
     owner = "noripyt";
@@ -56,24 +56,28 @@ buildPythonPackage rec {
   # redisTestHook does not work on darwin
   doCheck = !stdenv.hostPlatform.isDarwin;
 
-  # disable broken pinning test
   preCheck = ''
-    substituteInPlace cachalot/tests/read.py \
-      --replace-fail \
-        "def test_explain(" \
-        "def _test_explain("
+    export DJANGO_SETTINGS_MODULE=settings
   '';
 
-  checkPhase = ''
-    runHook preCheck
-    ${python.interpreter} runtests.py
-    runHook postCheck
-  '';
+  pytestFlags = [
+    "-o python_files=*.py"
+    "-o collect_imported_tests=false"
+    "cachalot/tests"
+    "cachalot/admin_tests"
+  ];
+
+  disabledTests = [
+    # relies on specific EXPLAIN output format from sqlite, which is not stable
+    "test_explain"
+    # broken on django-debug-toolbar 6.0
+    "test_rendering"
+  ];
 
   meta = with lib; {
     description = "No effort, no worry, maximum performance";
     homepage = "https://github.com/noripyt/django-cachalot";
-    changelog = "https://github.com/noripyt/django-cachalot/blob/${src.rev}/CHANGELOG.rst";
+    changelog = "https://github.com/noripyt/django-cachalot/blob/${src.tag}/CHANGELOG.rst";
     license = licenses.bsd3;
     maintainers = with maintainers; [ onny ];
   };

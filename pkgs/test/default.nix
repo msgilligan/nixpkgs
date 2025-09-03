@@ -131,6 +131,9 @@ with pkgs;
   fetchDebianPatch = recurseIntoAttrs (callPackages ../build-support/fetchdebianpatch/tests.nix { });
   fetchzip = recurseIntoAttrs (callPackages ../build-support/fetchzip/tests.nix { });
   fetchgit = recurseIntoAttrs (callPackages ../build-support/fetchgit/tests.nix { });
+  fetchNextcloudApp = recurseIntoAttrs (
+    callPackages ../build-support/fetchnextcloudapp/tests.nix { }
+  );
   fetchFromBitbucket = recurseIntoAttrs (callPackages ../build-support/fetchbitbucket/tests.nix { });
   fetchFirefoxAddon = recurseIntoAttrs (
     callPackages ../build-support/fetchfirefoxaddon/tests.nix { }
@@ -149,9 +152,7 @@ with pkgs;
 
   php = recurseIntoAttrs (callPackages ./php { });
 
-  pkg-config = recurseIntoAttrs (callPackage ../top-level/pkg-config/tests.nix { }) // {
-    __recurseIntoDerivationForReleaseJobs = true;
-  };
+  pkg-config = recurseIntoAttrs (callPackage ../top-level/pkg-config/tests.nix { });
 
   buildRustCrate = recurseIntoAttrs (callPackage ../build-support/rust/build-rust-crate/test { });
   importCargoLock = recurseIntoAttrs (callPackage ../build-support/rust/test/import-cargo-lock { });

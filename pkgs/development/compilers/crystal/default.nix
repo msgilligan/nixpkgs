@@ -247,8 +247,7 @@ let
         ln -s $bin/bin $out/bin
         ln -s $bin/share/bash-completion $out/share/bash-completion
         ln -s $bin/share/zsh $out/share/zsh
-        # fish completion was introduced in 1.6.0
-        test -f etc/completion.fish && ln -s $bin/share/fish $out/share/fish
+        ln -s $bin/share/fish $out/share/fish
         ln -s $lib $out/lib
 
         runHook postInstall
@@ -324,6 +323,14 @@ rec {
   crystal_1_16 = generic {
     version = "1.16.3";
     sha256 = "sha256-U9H1tHUMyDNicZnXzEccDki5bGXdV0B2Wu2PyCksPVI=";
+    binary = binaryCrystal_1_10;
+    llvmPackages = llvmPackages_18;
+    doCheck = false;
+  };
+
+  crystal_1_17 = generic {
+    version = "1.17.1";
+    sha256 = "sha256-+wHhozPhpIsfQy1Lw+V48zvuWCfXzT4IC9KA1AU/DLw=";
     binary = binaryCrystal_1_10;
     llvmPackages = llvmPackages_18;
     doCheck = false;

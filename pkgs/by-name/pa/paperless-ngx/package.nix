@@ -2,6 +2,8 @@
   lib,
   stdenv,
   fetchFromGitHub,
+  fetchPypi,
+  fetchpatch,
   node-gyp,
   nodejs_20,
   nixosTests,
@@ -27,19 +29,31 @@
   xorg,
 }:
 let
-  version = "2.18.1";
+  version = "2.18.2";
 
   src = fetchFromGitHub {
     owner = "paperless-ngx";
     repo = "paperless-ngx";
     tag = "v${version}";
-    hash = "sha256-POHF00cV8pl6i1rcwxtZ+Q1AlLybDj6gSlL0lPwSSCo=";
+    hash = "sha256-JaDeOiubu9VE8E/u2K9BS7GLNSTqXTcX926WhPMGd64=";
   };
 
   python = python3.override {
     self = python;
     packageOverrides = final: prev: {
       django = prev.django_5_2;
+
+      fido2 = prev.fido2.overridePythonAttrs {
+        version = "1.2.0";
+
+        src = fetchPypi {
+          pname = "fido2";
+          version = "1.2.0";
+          hash = "sha256-45+VkgEi1kKD/aXlWB2VogbnBPpChGv6RmL4aqDTMzs=";
+        };
+
+        pytestFlags = [ ];
+      };
 
       # tesseract5 may be overwritten in the paperless module and we need to propagate that to make the closure reduction effective
       ocrmypdf = prev.ocrmypdf.override { tesseract = tesseract5; };
@@ -154,10 +168,8 @@ python.pkgs.buildPythonApplication rec {
   ];
 
   pythonRelaxDeps = [
-    # https://github.com/NixOS/nixpkgs/pull/432489
-    "django"
-    "scikit-learn"
-
+    "django-allauth"
+    "rapidfuzz"
     "redis"
   ];
 
@@ -180,6 +192,7 @@ python.pkgs.buildPythonApplication rec {
             tag = version;
             hash = "sha256-1HmEJ5E4Vp/CoyzUegqQXpzKUuz3dLx2EEv7dk8fq8w=";
           };
+          patches = [ ];
         }
       ))
       django-auditlog

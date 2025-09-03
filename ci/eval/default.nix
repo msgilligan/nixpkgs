@@ -26,6 +26,11 @@ let
       root = ../..;
       fileset = unions (
         map (lib.path.append ../..) [
+          ".version"
+          "ci/supportedSystems.json"
+          "ci/eval/attrpaths.nix"
+          "ci/eval/chunk.nix"
+          "ci/eval/outpaths.nix"
           "default.nix"
           "doc"
           "lib"
@@ -33,8 +38,6 @@ let
           "modules"
           "nixos"
           "pkgs"
-          ".version"
-          "ci/supportedSystems.json"
         ]
       );
     };
@@ -60,7 +63,7 @@ let
         export GC_INITIAL_HEAP_SIZE=4g
         command time -f "Attribute eval done [%MKB max resident, %Es elapsed] %C" \
           nix-instantiate --eval --strict --json --show-trace \
-            "$src/pkgs/top-level/release-attrpaths-superset.nix" \
+            "$src/ci/eval/attrpaths.nix" \
             -A paths \
             -I "$src" \
             --option restrict-eval true \
@@ -78,7 +81,6 @@ let
       attrpathFile ? "${attrpathsSuperset { inherit evalSystem; }}/paths.json",
       # The number of attributes per chunk, see ./README.md for more info.
       chunkSize ? 5000,
-      checkMeta ? true,
 
       # Don't try to eval packages marked as broken.
       includeBroken ? false,
@@ -99,7 +101,7 @@ let
         set +e
         command time -o "$outputDir/timestats/$myChunk" \
           -f "Chunk $myChunk on $system done [%MKB max resident, %Es elapsed] %C" \
-          nix-env -f "${nixpkgs}/pkgs/top-level/release-outpaths-parallel.nix" \
+          nix-env -f "${nixpkgs}/ci/eval/chunk.nix" \
           --eval-system "$system" \
           --option restrict-eval true \
           --option allow-import-from-derivation false \
@@ -110,7 +112,6 @@ let
           --arg myChunk "$myChunk" \
           --arg attrpathFile "${attrpathFile}" \
           --arg systems "[ \"$system\" ]" \
-          --arg checkMeta ${lib.boolToString checkMeta} \
           --arg includeBroken ${lib.boolToString includeBroken} \
           -I ${nixpkgs} \
           -I ${attrpathFile} \
@@ -240,29 +241,44 @@ let
 
   compare = callPackage ./compare { };
 
+  baseline =
+    {
+      # Whether to evaluate on a specific set of systems, by default all are evaluated
+      evalSystems ? if quickTest then [ "x86_64-linux" ] else supportedSystems,
+      # The number of attributes per chunk, see ./README.md for more info.
+      chunkSize ? 5000,
+      quickTest ? false,
+    }:
+    symlinkJoin {
+      name = "nixpkgs-eval-baseline";
+      paths = map (
+        evalSystem:
+        singleSystem {
+          inherit quickTest evalSystem chunkSize;
+        }
+      ) evalSystems;
+    };
+
   full =
     {
       # Whether to evaluate on a specific set of systems, by default all are evaluated
       evalSystems ? if quickTest then [ "x86_64-linux" ] else supportedSystems,
       # The number of attributes per chunk, see ./README.md for more info.
-      chunkSize,
+      chunkSize ? 5000,
       quickTest ? false,
+      baseline,
     }:
     let
       diffs = symlinkJoin {
-        name = "diffs";
+        name = "nixpkgs-eval-diffs";
         paths = map (
           evalSystem:
-          let
-            eval = singleSystem {
-              inherit quickTest evalSystem chunkSize;
-            };
-          in
           diff {
             inherit evalSystem;
-            # Local "full" evaluation doesn't do a real diff.
-            beforeDir = eval;
-            afterDir = eval;
+            beforeDir = baseline;
+            afterDir = singleSystem {
+              inherit quickTest evalSystem chunkSize;
+            };
           }
         ) evalSystems;
       };
@@ -280,7 +296,8 @@ in
     combine
     compare
     # The above three are used by separate VMs in a GitHub workflow,
-    # while the below is intended for testing on a single local machine
+    # while the below are intended for testing on a single local machine
+    baseline
     full
     ;
 }
