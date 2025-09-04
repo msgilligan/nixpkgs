@@ -1955,8 +1955,6 @@ self: super: with self; {
 
   bizkaibus = callPackage ../development/python-modules/bizkaibus { };
 
-  bjoern = callPackage ../development/python-modules/bjoern { };
-
   bk7231tools = callPackage ../development/python-modules/bk7231tools { };
 
   black = callPackage ../development/python-modules/black { };
@@ -2805,6 +2803,10 @@ self: super: with self; {
 
   colcon-defaults = callPackage ../development/python-modules/colcon-defaults { };
 
+  colcon-installed-package-information =
+    callPackage ../development/python-modules/colcon-installed-package-information
+      { };
+
   colcon-library-path = callPackage ../development/python-modules/colcon-library-path { };
 
   colcon-mixin = callPackage ../development/python-modules/colcon-mixin { };
@@ -3090,6 +3092,8 @@ self: super: with self; {
   crcmod = callPackage ../development/python-modules/crcmod { };
 
   credstash = callPackage ../development/python-modules/credstash { };
+
+  crewai = callPackage ../development/python-modules/crewai { };
 
   crispy-bootstrap3 = callPackage ../development/python-modules/crispy-bootstrap3 { };
 
@@ -9615,6 +9619,8 @@ self: super: with self; {
 
   moviepy = callPackage ../development/python-modules/moviepy { };
 
+  moyopy = callPackage ../development/python-modules/moyopy { };
+
   mozart-api = callPackage ../development/python-modules/mozart-api { };
 
   mozilla-django-oidc = callPackage ../development/python-modules/mozilla-django-oidc { };
@@ -11131,8 +11137,6 @@ self: super: with self; {
 
   orjson = callPackage ../development/python-modules/orjson { };
 
-  orm = callPackage ../development/python-modules/orm { };
-
   ormar = callPackage ../development/python-modules/ormar { };
 
   ormsgpack = callPackage ../development/python-modules/ormsgpack { };
@@ -11583,7 +11587,6 @@ self: super: with self; {
 
   petsc4py = toPythonModule (
     pkgs.petsc.override {
-      python3 = python;
       python3Packages = self;
       pythonSupport = true;
     }
@@ -16820,7 +16823,6 @@ self: super: with self; {
   slepc4py = toPythonModule (
     pkgs.slepc.override {
       pythonSupport = true;
-      python3 = self.python;
       python3Packages = self;
       petsc = petsc4py;
     }

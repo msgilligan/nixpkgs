@@ -1,7 +1,6 @@
 {
   stdenv,
   lib,
-  pkgs,
   fetchFromGitHub,
   fetchFromGitLab,
   fetchpatch,
@@ -251,9 +250,6 @@ let
     "Magma cudaPackages does not match cudaPackages" =
       cudaSupport
       && (effectiveMagma.cudaPackages.cudaMajorMinorVersion != cudaPackages.cudaMajorMinorVersion);
-    # Should be fixed by WIP https://github.com/NixOS/nixpkgs/pull/438399
-    "ROCm support on non-default python versions is temporarily broken" =
-      rocmSupport && (pkgs.python3.version != python.version);
   };
 
   unroll-src = writeShellScript "unroll-src" ''
@@ -373,13 +369,6 @@ buildPythonPackage rec {
     # Doesn't pick up the environment variable?
     substituteInPlace third_party/kineto/libkineto/CMakeLists.txt \
       --replace-fail "\''$ENV{ROCM_SOURCE_DIR}" "${rocmtoolkit_joined}"
-
-    # Workaround cmake error //include does not exist! in rocm-core-config.cmake
-    # Removing the call falls back to hip_version. Can likely be removed after ROCm 6.4 bump
-    substituteInPlace cmake/public/LoadHIP.cmake \
-      --replace-fail \
-        "find_package(rocm-core CONFIG)" \
-        ""
 
     # Use composable kernel as dependency, rather than built-in third-party
     substituteInPlace aten/src/ATen/CMakeLists.txt \

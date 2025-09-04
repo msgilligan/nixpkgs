@@ -16644,12 +16644,6 @@
     githubId = 1699466;
     name = "Michael Peyton Jones";
   };
-  michaelshmitty = {
-    name = "Michael Smith";
-    email = "shmitty@protonmail.com";
-    github = "michaelshmitty";
-    githubId = 114845;
-  };
   michaelvanstraten = {
     name = "Michael van Straten";
     email = "michael@vanstraten.de";
@@ -20428,6 +20422,12 @@
     githubId = 46154511;
     name = "Kevin Mullins";
     keys = [ { fingerprint = "2CD2 B030 BD22 32EF DF5A  008A 3618 20A4 5DB4 1E9A"; } ];
+  };
+  podium868909 = {
+    email = "89096245@proton.me";
+    github = "podium868909";
+    githubId = 150333826;
+    name = "podium868909";
   };
   podocarp = {
     email = "xdjiaxd@gmail.com";
