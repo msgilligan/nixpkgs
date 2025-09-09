@@ -449,6 +449,7 @@
   ./services/backup/btrbk.nix
   ./services/backup/duplicati.nix
   ./services/backup/duplicity.nix
+  ./services/backup/libvirtd-autosnapshot.nix
   ./services/backup/mysql-backup.nix
   ./services/backup/pgbackrest.nix
   ./services/backup/postgresql-backup.nix
@@ -1817,6 +1818,7 @@
   ./system/boot/loader/init-script/init-script.nix
   ./system/boot/loader/limine/limine.nix
   ./system/boot/loader/loader.nix
+  ./system/boot/loader/refind/refind.nix
   ./system/boot/loader/systemd-boot/systemd-boot.nix
   ./system/boot/luksroot.nix
   ./system/boot/modprobe.nix

@@ -343,8 +343,6 @@ with pkgs;
 
   coolercontrol = recurseIntoAttrs (callPackage ../applications/system/coolercontrol { });
 
-  copilot-language-server-fhs = copilot-language-server.fhs;
-
   cup-docker-noserver = cup-docker.override { withServer = false; };
 
   deck = callPackage ../by-name/de/deck/package.nix {
@@ -858,6 +856,8 @@ with pkgs;
   };
 
   referencesByPopularity = callPackage ../build-support/references-by-popularity { };
+
+  dockerAutoLayer = callPackage ../build-support/docker/auto-layer.nix { };
 
   dockerMakeLayers = callPackage ../build-support/docker/make-layers.nix { };
 
@@ -3018,11 +3018,7 @@ with pkgs;
     isStereo = true;
   };
 
-  google-cloud-sdk = callPackage ../tools/admin/google-cloud-sdk {
-    python3 = python312;
-  };
   google-cloud-sdk-gce = google-cloud-sdk.override {
-    python3 = python312;
     with-gce = true;
   };
 
@@ -3069,6 +3065,14 @@ with pkgs;
 
   grub2_xen = grub2.override {
     xenSupport = true;
+  };
+
+  grub2_xen_pvh = grub2.override {
+    xenPvhSupport = true;
+  };
+
+  grub2_pvgrub_image = grub2_pvhgrub_image.override {
+    grubPlatform = "xen";
   };
 
   grub4dos = callPackage ../tools/misc/grub4dos {
@@ -3151,8 +3155,6 @@ with pkgs;
 
   hockeypuck-web = callPackage ../servers/hockeypuck/web.nix { };
 
-  homesick = callPackage ../tools/misc/homesick { };
-
   host = bind.host;
 
   hotdoc = python3Packages.callPackage ../development/tools/hotdoc { };
@@ -3182,20 +3184,6 @@ with pkgs;
   icemon = libsForQt5.callPackage ../applications/networking/icemon { };
 
   icepeak = haskell.lib.compose.justStaticExecutables haskellPackages.icepeak;
-
-  inherit
-    (callPackages ../tools/filesystems/irods rec {
-      stdenv = llvmPackages_13.libcxxStdenv;
-      libcxx = llvmPackages_13.libcxx;
-      boost = boost178.override { inherit stdenv; };
-      fmt = fmt_9.override { inherit stdenv; };
-      nanodbc_llvm = nanodbc.override { inherit stdenv; };
-      avro-cpp_llvm = avro-cpp.override { inherit stdenv boost; };
-      spdlog_llvm = spdlog.override { inherit stdenv fmt; };
-    })
-    irods
-    irods-icommands
-    ;
 
   ihaskell = callPackage ../development/tools/haskell/ihaskell/wrapper.nix {
     inherit (haskellPackages) ghcWithPackages;
@@ -3371,8 +3359,6 @@ with pkgs;
   lagrange-tui = lagrange.override { enableTUI = true; };
 
   kzipmix = pkgsi686Linux.callPackage ../tools/compression/kzipmix { };
-
-  mailcatcher = callPackage ../development/web/mailcatcher { };
 
   maskromtool = qt6Packages.callPackage ../tools/graphics/maskromtool { };
 
@@ -4030,10 +4016,6 @@ with pkgs;
   };
 
   rocket = libsForQt5.callPackage ../tools/graphics/rocket { };
-
-  rtabmap = callPackage ../by-name/rt/rtabmap/package.nix {
-    pcl = pcl.override { vtk = vtkWithQt5; };
-  };
 
   rtaudio = callPackage ../development/libraries/audio/rtaudio {
     jack = libjack2;
@@ -4720,7 +4702,6 @@ with pkgs;
   corretto21 = javaPackages.compiler.corretto21;
 
   inherit (callPackage ../development/compilers/crystal { })
-    crystal_1_11
     crystal_1_14
     crystal_1_15
     crystal_1_16
@@ -5661,10 +5642,6 @@ with pkgs;
     );
   buildRustCrateHelpers = callPackage ../build-support/rust/build-rust-crate/helpers.nix { };
 
-  cargo-flamegraph = callPackage ../by-name/ca/cargo-flamegraph/package.nix {
-    inherit (linuxPackages) perf;
-  };
-
   defaultCrateOverrides = callPackage ../build-support/rust/default-crate-overrides.nix { };
 
   inherit (callPackages ../development/tools/rust/cargo-pgrx { })
@@ -6437,8 +6414,17 @@ with pkgs;
 
   anybadge = with python3Packages; toPythonApplication anybadge;
 
-  ansible = ansible_2_18;
-  ansible_2_18 = python3Packages.toPythonApplication python3Packages.ansible-core;
+  ansible = ansible_2_19;
+  ansible_2_19 = python3Packages.toPythonApplication python3Packages.ansible-core;
+  ansible_2_18 = python3Packages.toPythonApplication (
+    python3Packages.ansible-core.overridePythonAttrs (oldAttrs: rec {
+      version = "2.18.8";
+      src = oldAttrs.src.override {
+        inherit version;
+        hash = "sha256-sHZiFalqR845kz0n4emWyivrVM8bOQfHQtNckTsfeM0=";
+      };
+    })
+  );
   ansible_2_17 = python3Packages.toPythonApplication (
     python3Packages.ansible-core.overridePythonAttrs (oldAttrs: rec {
       version = "2.17.8";
@@ -6552,7 +6538,7 @@ with pkgs;
 
   bazel = bazel_7;
 
-  bazel_7 = callPackage ../development/tools/build-managers/bazel/bazel_7 {
+  bazel_7 = callPackage ../by-name/ba/bazel_7/package.nix {
     inherit (darwin) sigtool;
     buildJdk = jdk21_headless;
     runJdk = jdk21_headless;
@@ -7096,7 +7082,6 @@ with pkgs;
   pycritty = with python3Packages; toPythonApplication pycritty;
 
   qtcreator = qt6Packages.callPackage ../development/tools/qtcreator {
-    inherit (linuxPackages) perf;
     llvmPackages = llvmPackages_21;
     stdenv = llvmPackages_21.stdenv;
   };
@@ -7183,9 +7168,7 @@ with pkgs;
 
   snowman = qt5.callPackage ../development/tools/analysis/snowman { };
 
-  sparse = callPackage ../development/tools/analysis/sparse {
-    llvm = llvm_14;
-  };
+  sparse = callPackage ../development/tools/analysis/sparse { };
 
   speedtest-cli = with python3Packages; toPythonApplication speedtest-cli;
 
@@ -9254,6 +9237,14 @@ with pkgs;
 
   zigStdenv = if stdenv.cc.isZig then stdenv else lowPrio zig.passthru.stdenv;
 
+  inherit (callPackages ../development/tools/zls { })
+    zls_0_14
+    zls_0_15
+    ;
+
+  # This should be kept updated to ensure the default zls version matches the default zig version.
+  zls = zls_0_14;
+
   libzint = zint-qt.override { withGUI = false; };
 
   aroccPackages = recurseIntoAttrs (callPackage ../development/compilers/arocc { });
@@ -10346,12 +10337,9 @@ with pkgs;
     fftw = fftwFloat;
   };
 
-  buildArmTrustedFirmware =
-    callPackage ../misc/arm-trusted-firmware/build-arm-trusted-firmware.nix
-      { };
-
   arm-trusted-firmware = callPackage ../misc/arm-trusted-firmware { };
   inherit (arm-trusted-firmware)
+    buildArmTrustedFirmware
     armTrustedFirmwareTools
     armTrustedFirmwareAllwinner
     armTrustedFirmwareAllwinnerH616
@@ -10790,6 +10778,7 @@ with pkgs;
   inherit (callPackage ../misc/uboot { })
     buildUBoot
     ubootTools
+    ubootPythonTools
     ubootA20OlinuxinoLime
     ubootA20OlinuxinoLime2EMMC
     ubootBananaPi
@@ -12112,7 +12101,6 @@ with pkgs;
   jwm-settings-manager = callPackage ../applications/window-managers/jwm/jwm-settings-manager.nix { };
 
   inherit (callPackage ../applications/networking/cluster/k3s { })
-    k3s_1_30
     k3s_1_31
     k3s_1_32
     k3s_1_33
@@ -13505,9 +13493,7 @@ with pkgs;
     xwaylandSupport = false;
   };
 
-  whalebird = callPackage ../applications/misc/whalebird {
-    electron = electron_36;
-  };
+  whalebird = callPackage ../applications/misc/whalebird { };
 
   inherit (windowmaker) dockapps;
 
@@ -13632,9 +13618,7 @@ with pkgs;
 
   zeroc-ice-cpp11 = zeroc-ice.override { cpp11 = true; };
 
-  zexy = callPackage ../applications/audio/pd-plugins/zexy {
-    autoconf = buildPackages.autoconf269;
-  };
+  zexy = callPackage ../applications/audio/pd-plugins/zexy { };
 
   zed-editor-fhs = zed-editor.fhs;
 
@@ -14424,74 +14408,9 @@ with pkgs;
 
   siesta-mpi = callPackage ../applications/science/chemistry/siesta { useMpi = true; };
 
-  cp2k =
-    # CP2K requires all dependencies from the Grimme ecosystem to be build with
-    # CMake instead of Meson. Unfortunately most other consumers require meson
-    let
-      grimmeCmake = lib.makeScope pkgs.newScope (self: {
-        mctc-lib = pkgs.mctc-lib.override {
-          buildType = "cmake";
-          inherit (self) jonquil toml-f;
-        };
-
-        toml-f = pkgs.toml-f.override {
-          buildType = "cmake";
-          inherit (self) test-drive;
-        };
-
-        dftd4 = pkgs.dftd4.override {
-          buildType = "cmake";
-          inherit (self) mstore mctc-lib multicharge;
-        };
-
-        jonquil = pkgs.jonquil.override {
-          buildType = "cmake";
-          inherit (self) toml-f test-drive;
-        };
-
-        mstore = pkgs.mstore.override {
-          buildType = "cmake";
-          inherit (self) mctc-lib;
-        };
-
-        multicharge = pkgs.multicharge.override {
-          buildType = "cmake";
-          inherit (self) mctc-lib mstore;
-        };
-
-        test-drive = pkgs.test-drive.override { buildType = "cmake"; };
-
-        simple-dftd3 = pkgs.simple-dftd3.override {
-          buildType = "cmake";
-          inherit (self) mctc-lib mstore toml-f;
-        };
-
-        tblite = pkgs.tblite.override {
-          buildType = "cmake";
-          inherit (self)
-            mctc-lib
-            mstore
-            toml-f
-            multicharge
-            dftd4
-            simple-dftd3
-            ;
-        };
-
-        sirius = pkgs.sirius.override {
-          inherit (self)
-            mctc-lib
-            toml-f
-            multicharge
-            dftd4
-            simple-dftd3
-            ;
-        };
-      });
-    in
-    grimmeCmake.callPackage ../applications/science/chemistry/cp2k/default.nix {
-      libxc = pkgs.libxc_7;
-    };
+  cp2k = callPackage ../by-name/cp/cp2k/package.nix {
+    libxc = pkgs.libxc_7;
+  };
 
   ### SCIENCE/GEOMETRY
 
@@ -14817,8 +14736,6 @@ with pkgs;
 
   ### SCIENCE / ELECTRONICS
 
-  appcsxcad = libsForQt5.callPackage ../applications/science/electronics/appcsxcad { };
-
   simulide_0_4_15 = callPackage ../by-name/si/simulide/package.nix { versionNum = "0.4.15"; };
   simulide_1_0_0 = callPackage ../by-name/si/simulide/package.nix { versionNum = "1.0.0"; };
   simulide_1_1_0 = callPackage ../by-name/si/simulide/package.nix { versionNum = "1.1.0"; };
@@ -14876,9 +14793,7 @@ with pkgs;
     withNgshared = false;
   };
 
-  openems = callPackage ../applications/science/electronics/openems {
-    qcsxcad = libsForQt5.qcsxcad;
-  };
+  openems = callPackage ../applications/science/electronics/openems { };
 
   xyce-parallel = callPackage ../by-name/xy/xyce/package.nix {
     withMPI = true;
@@ -15221,8 +15136,6 @@ with pkgs;
   nix-info = callPackage ../tools/nix/info { };
   nix-info-tested = nix-info.override { doCheck = true; };
 
-  nix-linter = haskell.lib.compose.justStaticExecutables (haskellPackages.nix-linter);
-
   nix-prefetch-github = with python3Packages; toPythonApplication nix-prefetch-github;
 
   inherit (callPackages ../tools/package-management/nix-prefetch-scripts { })
@@ -15494,7 +15407,7 @@ with pkgs;
 
   nitrokey-app = libsForQt5.callPackage ../tools/security/nitrokey-app { };
 
-  nitrokey-app2 = qt6Packages.callPackage ../tools/security/nitrokey-app2 { };
+  nitrokey-app2 = python3Packages.callPackage ../tools/security/nitrokey-app2 { };
 
   hy = with python3Packages; toPythonApplication hy;
 
